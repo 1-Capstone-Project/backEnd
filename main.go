@@ -21,6 +21,7 @@ type CompanyInfo struct {
 	Welfare              string `json:"welfare"`
 	RecruitmentMethod    string `json:"recruitment_method"`
 	Requirements         string `json:"requirements"`
+	ImageURL             string `json:"image_url"` // 추가된 필드
 }
 
 var db *sql.DB
@@ -56,7 +57,7 @@ func main() {
 
 // getCompanyInfo 핸들러 함수
 func getCompanyInfo(c *gin.Context) {
-	rows, err := db.Query("SELECT id, company_name, headquarters_location, industry, welfare, recruitment_method, requirements FROM company_info")
+	rows, err := db.Query("SELECT id, company_name, headquarters_location, industry, welfare, recruitment_method, requirements, image_url FROM company_info")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -66,7 +67,7 @@ func getCompanyInfo(c *gin.Context) {
 	var companyInfos []CompanyInfo
 	for rows.Next() {
 		var companyInfo CompanyInfo
-		if err := rows.Scan(&companyInfo.ID, &companyInfo.CompanyName, &companyInfo.HeadquartersLocation, &companyInfo.Industry, &companyInfo.Welfare, &companyInfo.RecruitmentMethod, &companyInfo.Requirements); err != nil {
+		if err := rows.Scan(&companyInfo.ID, &companyInfo.CompanyName, &companyInfo.HeadquartersLocation, &companyInfo.Industry, &companyInfo.Welfare, &companyInfo.RecruitmentMethod, &companyInfo.Requirements, &companyInfo.ImageURL); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
