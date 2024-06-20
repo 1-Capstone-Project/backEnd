@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
-	"encoding/json"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
@@ -21,7 +20,7 @@ type CompanyInfo struct {
 	Welfare              string `json:"welfare"`
 	RecruitmentMethod    string `json:"recruitment_method"`
 	Requirements         string `json:"requirements"`
-	ImageURL             string `json:"image_url"` // 추가된 필드
+	ImageURL             string `json:"image_url"`
 }
 
 var db *sql.DB
@@ -57,7 +56,26 @@ func main() {
 
 // getCompanyInfo 핸들러 함수
 func getCompanyInfo(c *gin.Context) {
-	rows, err := db.Query("SELECT id, company_name, headquarters_location, industry, welfare, recruitment_method, requirements, image_url FROM company_info")
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "50")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page number"})
+		return
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid limit number"})
+		return
+	}
+
+	offset := (page - 1) * limit
+
+	query := fmt.Sprintf("SELECT id, company_name, headquarters_location, industry, welfare, recruitment_method, requirements, image_url FROM company_info LIMIT %d OFFSET %d", limit, offset)
+
+	rows, err := db.Query(query)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -74,12 +92,5 @@ func getCompanyInfo(c *gin.Context) {
 		companyInfos = append(companyInfos, companyInfo)
 	}
 
-	// JSON 정렬 및 변환
-	companyInfosJSON, err := json.MarshalIndent(companyInfos, "", "  ")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.Data(http.StatusOK, "application/json; charset=utf-8", companyInfosJSON)
+	c.JSON(http.StatusOK, companyInfos)
 }
