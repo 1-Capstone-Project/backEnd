@@ -112,6 +112,7 @@ func addSchedule(c *gin.Context) {
 
 	// 요청 바디에서 JSON 데이터를 파싱
 	if err := c.ShouldBindJSON(&newSchedule); err != nil {
+		log.Printf("JSON binding error: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -120,15 +121,18 @@ func addSchedule(c *gin.Context) {
 	query := `INSERT INTO schedules (title, description, schedule_date, start_time, end_time, img_url) VALUES (?, ?, ?, ?, ?, ?)`
 	result, err := db.Exec(query, newSchedule.Title, newSchedule.Description, newSchedule.ScheduleDate, newSchedule.StartTime, newSchedule.EndTime, newSchedule.ImgURL)
 	if err != nil {
+		log.Printf("Database insert error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
+		log.Printf("Getting last insert ID error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	log.Printf("Schedule added successfully with ID: %d", id)
 	c.JSON(http.StatusOK, gin.H{"message": "Schedule added successfully", "id": id})
 }
