@@ -61,6 +61,7 @@ func main() {
 	// API 엔드포인트 설정
 	router.GET("/company_info", getCompanyInfo)
 	router.POST("/schedules", addSchedule)
+	router.GET("/schedules", getSchedules) // GET /schedules 엔드포인트 추가
 
 	// 서버 실행
 	router.Run(":8080")
@@ -135,4 +136,27 @@ func addSchedule(c *gin.Context) {
 
 	log.Printf("Schedule added successfully with ID: %d", id)
 	c.JSON(http.StatusOK, gin.H{"message": "Schedule added successfully", "id": id})
+}
+
+func getSchedules(c *gin.Context) {
+	query := "SELECT id, title, description, schedule_date, start_time, end_time, IFNULL(img_url, '') FROM schedules"
+
+	rows, err := db.Query(query)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	var schedules []Schedule
+	for rows.Next() {
+		var schedule Schedule
+		if err := rows.Scan(&schedule.ID, &schedule.Title, &schedule.Description, &schedule.ScheduleDate, &schedule.StartTime, &schedule.EndTime, &schedule.ImgURL); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		schedules = append(schedules, schedule)
+	}
+
+	c.JSON(http.StatusOK, schedules) // 최종 결과 전송
 }
