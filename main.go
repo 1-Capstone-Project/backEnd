@@ -118,11 +118,17 @@ func addSchedule(c *gin.Context) {
 
 	// MySQL에 데이터 삽입
 	query := `INSERT INTO schedules (title, description, schedule_date, start_time, end_time, img_url) VALUES (?, ?, ?, ?, ?, ?)`
-	_, err := db.Exec(query, newSchedule.Title, newSchedule.Description, newSchedule.ScheduleDate, newSchedule.StartTime, newSchedule.EndTime, newSchedule.ImgURL)
+	result, err := db.Exec(query, newSchedule.Title, newSchedule.Description, newSchedule.ScheduleDate, newSchedule.StartTime, newSchedule.EndTime, newSchedule.ImgURL)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Schedule added successfully"})
+	id, err := result.LastInsertId()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Schedule added successfully", "id": id})
 }
