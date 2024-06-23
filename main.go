@@ -11,7 +11,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// CompanyInfo struct
+// CompanyInfo struct 정의
 type CompanyInfo struct {
 	ID                   int    `json:"id"`
 	CompanyName          string `json:"company_name"`
@@ -21,6 +21,17 @@ type CompanyInfo struct {
 	RecruitmentMethod    string `json:"recruitment_method"`
 	Requirements         string `json:"requirements"`
 	ImageURL             string `json:"image_url"`
+}
+
+// Schedule struct 정의
+type Schedule struct {
+	ID           int    `json:"id"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	ScheduleDate string `json:"schedule_date"` // `time.Time` 대신 string 사용
+	StartTime    string `json:"start_time"`    // `time.Time` 대신 string 사용
+	EndTime      string `json:"end_time"`      // `time.Time` 대신 string 사용
+	ImgURL       string `json:"img_url"`
 }
 
 var db *sql.DB
@@ -49,6 +60,7 @@ func main() {
 
 	// API 엔드포인트 설정
 	router.GET("/company_info", getCompanyInfo)
+	router.POST("/schedules", addSchedule)
 
 	// 서버 실행
 	router.Run(":8080")
@@ -57,7 +69,7 @@ func main() {
 // getCompanyInfo 핸들러 함수
 func getCompanyInfo(c *gin.Context) {
 	pageStr := c.DefaultQuery("page", "1")
-	limitStr := c.DefaultQuery("limit", "50")
+	limitStr := c.DefaultQuery("limit", "20") // 기본 limit 설정
 
 	page, err := strconv.Atoi(pageStr)
 	if err != nil || page < 1 {
@@ -72,7 +84,6 @@ func getCompanyInfo(c *gin.Context) {
 	}
 
 	offset := (page - 1) * limit
-
 	query := fmt.Sprintf("SELECT id, company_name, headquarters_location, industry, welfare, recruitment_method, requirements, image_url FROM company_info LIMIT %d OFFSET %d", limit, offset)
 
 	rows, err := db.Query(query)
@@ -92,5 +103,26 @@ func getCompanyInfo(c *gin.Context) {
 		companyInfos = append(companyInfos, companyInfo)
 	}
 
-	c.JSON(http.StatusOK, companyInfos)
+	c.JSON(http.StatusOK, companyInfos) // 최종 결과 전송
+}
+
+// addSchedule 핸들러 함수
+func addSchedule(c *gin.Context) {
+	var newSchedule Schedule
+
+	// 요청 바디에서 JSON 데이터를 파싱
+	if err := c.ShouldBindJSON(&newSchedule); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// MySQL에 데이터 삽입
+	query := `INSERT INTO schedules (title, description, schedule_date, start_time, end_time, img_url) VALUES (?, ?, ?, ?, ?, ?)`
+	_, err := db.Exec(query, newSchedule.Title, newSchedule.Description, newSchedule.ScheduleDate, newSchedule.StartTime, newSchedule.EndTime, newSchedule.ImgURL)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Schedule added successfully"})
 }
