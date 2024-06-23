@@ -138,8 +138,9 @@ func addSchedule(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Schedule added successfully", "id": id})
 }
 
+// getSchedules 핸들러 함수
 func getSchedules(c *gin.Context) {
-	query := "SELECT id, title, description, schedule_date, start_time, end_time, IFNULL(img_url, '') FROM schedules"
+	query := "SELECT id, title, description, schedule_date, IFNULL(start_time, ''), IFNULL(end_time, ''), img_url FROM schedules"
 
 	rows, err := db.Query(query)
 	if err != nil {
