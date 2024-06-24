@@ -34,6 +34,14 @@ type Schedule struct {
 	ImgURL       string `json:"img_url"`
 }
 
+// Post struct 정의
+type Post struct {
+	ID          int    `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	ImgURL      string `json:"img_url"`
+}
+
 var db *sql.DB
 
 func main() {
@@ -62,6 +70,7 @@ func main() {
 	router.GET("/company_info", getCompanyInfo)
 	router.POST("/schedules", addSchedule)
 	router.GET("/schedules", getSchedules) // GET /schedules 엔드포인트 추가
+	router.POST("/posts", addPost)         // 새로운 엔드포인트 추가
 
 	// 서버 실행
 	router.Run(":8080")
@@ -138,9 +147,9 @@ func addSchedule(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Schedule added successfully", "id": id})
 }
 
-// getSchedules 핸들러 함수
+// getSchedules 핸들러 함수 추가
 func getSchedules(c *gin.Context) {
-	query := "SELECT id, title, description, schedule_date, IFNULL(start_time, ''), IFNULL(end_time, ''), img_url FROM schedules"
+	query := "SELECT id, title, description, schedule_date, start_time, end_time, IFNULL(img_url, '') FROM schedules"
 
 	rows, err := db.Query(query)
 	if err != nil {
@@ -160,4 +169,35 @@ func getSchedules(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, schedules) // 최종 결과 전송
+}
+
+// addPost 핸들러 함수
+func addPost(c *gin.Context) {
+	var newPost Post
+
+	// 요청 바디에서 JSON 데이터를 파싱
+	if err := c.ShouldBindJSON(&newPost); err != nil {
+		log.Printf("JSON binding error: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// MySQL에 데이터 삽입
+	query := `INSERT INTO posts (title, description, img_url) VALUES (?, ?, ?)`
+	result, err := db.Exec(query, newPost.Title, newPost.Description, newPost.ImgURL)
+	if err != nil {
+		log.Printf("Database insert error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		log.Printf("Getting last insert ID error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Printf("Post added successfully with ID: %d", id)
+	c.JSON(http.StatusOK, gin.H{"message": "Post added successfully", "id": id})
 }
