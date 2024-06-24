@@ -11,7 +11,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// CompanyInfo struct 정의
 type CompanyInfo struct {
 	ID                   int    `json:"id"`
 	CompanyName          string `json:"company_name"`
@@ -23,7 +22,6 @@ type CompanyInfo struct {
 	ImageURL             string `json:"image_url"`
 }
 
-// Schedule struct 정의
 type Schedule struct {
 	ID           int    `json:"id"`
 	Title        string `json:"title"`
@@ -34,7 +32,6 @@ type Schedule struct {
 	ImgURL       string `json:"img_url"`
 }
 
-// Post struct 정의
 type Post struct {
 	ID          int    `json:"id"`
 	Title       string `json:"title"`
@@ -61,7 +58,6 @@ func main() {
 
 	router := gin.Default()
 
-	// CORS 설정
 	router.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
@@ -153,6 +149,7 @@ func getSchedules(c *gin.Context) {
 
 	rows, err := db.Query(query)
 	if err != nil {
+		log.Printf("Database query error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -162,6 +159,7 @@ func getSchedules(c *gin.Context) {
 	for rows.Next() {
 		var schedule Schedule
 		if err := rows.Scan(&schedule.ID, &schedule.Title, &schedule.Description, &schedule.ScheduleDate, &schedule.StartTime, &schedule.EndTime, &schedule.ImgURL); err != nil {
+			log.Printf("Row scan error: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
