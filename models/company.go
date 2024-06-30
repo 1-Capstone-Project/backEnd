@@ -8,5 +8,6 @@ type CompanyInfo struct {
 	Welfare              string `json:"welfare"`
 	RecruitmentMethod    string `json:"recruitment_method"`
 	Requirements         string `json:"requirements"`
+	Website              string `json:"website"`
 	ImageURL             string `json:"image_url"`
 }

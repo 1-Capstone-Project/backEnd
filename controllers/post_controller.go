@@ -9,32 +9,33 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AddPost(db *sql.DB) gin.HandlerFunc {
+func GetPosts(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var newPost models.Post
-
-		if err := c.ShouldBindJSON(&newPost); err != nil {
-			log.Printf("JSON binding error: %v", err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		rows, err := db.Query("SELECT id, title, description, img_url FROM posts")
+		if err != nil {
+			log.Printf("Database query error: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+		defer rows.Close()
 
-		query := `INSERT INTO posts (title, description, img_url) VALUES (?, ?, ?)`
-		result, err := db.Exec(query, newPost.Title, newPost.Description, newPost.ImgURL)
-		if err != nil {
-			log.Printf("Database insert error: %v", err)
+		var posts []models.Post
+		for rows.Next() {
+			var post models.Post
+			if err := rows.Scan(&post.ID, &post.Title, &post.Description, &post.ImgURL); err != nil {
+				log.Printf("Row scan error: %v", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			posts = append(posts, post)
+		}
+
+		if err := rows.Err(); err != nil {
+			log.Printf("Rows iteration error: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		id, err := result.LastInsertId()
-		if err != nil {
-			log.Printf("Getting last insert ID error: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		log.Printf("Post added successfully with ID: %d", id)
-		c.JSON(http.StatusOK, gin.H{"message": "Post added successfully", "id": id})
+		c.JSON(http.StatusOK, posts)
 	}
 }

@@ -28,7 +28,7 @@ func GetCompanyInfo(db *sql.DB) gin.HandlerFunc {
 		}
 
 		offset := (page - 1) * limit
-		query := fmt.Sprintf("SELECT id, company_name, headquarters_location, industry, welfare, recruitment_method, requirements, image_url FROM company_info LIMIT %d OFFSET %d", limit, offset)
+		query := fmt.Sprintf("SELECT id, company_name, headquarters_location, industry, welfare, recruitment_method, requirements, image_url, website FROM company_info LIMIT %d OFFSET %d", limit, offset)
 
 		rows, err := db.Query(query)
 		if err != nil {
@@ -40,7 +40,7 @@ func GetCompanyInfo(db *sql.DB) gin.HandlerFunc {
 		var companyInfos []models.CompanyInfo
 		for rows.Next() {
 			var companyInfo models.CompanyInfo
-			if err := rows.Scan(&companyInfo.ID, &companyInfo.CompanyName, &companyInfo.HeadquartersLocation, &companyInfo.Industry, &companyInfo.Welfare, &companyInfo.RecruitmentMethod, &companyInfo.Requirements, &companyInfo.ImageURL); err != nil {
+			if err := rows.Scan(&companyInfo.ID, &companyInfo.CompanyName, &companyInfo.HeadquartersLocation, &companyInfo.Industry, &companyInfo.Welfare, &companyInfo.RecruitmentMethod, &companyInfo.Requirements, &companyInfo.ImageURL, &companyInfo.Website); err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}

@@ -26,7 +26,7 @@ func SetupRouter(db *sql.DB) *gin.Engine {
 	router.GET("/company_info", controllers.GetCompanyInfo(db))
 	router.POST("/schedules", controllers.AddSchedule(db))
 	router.GET("/schedules", controllers.GetSchedules(db))
-	router.POST("/posts", controllers.AddPost(db))
+	router.GET("/posts", controllers.GetPosts(db)) // GET 핸들러 추가
 
 	return router
 }
