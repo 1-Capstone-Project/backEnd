@@ -45,7 +45,7 @@ var db *sql.DB
 func main() {
 	var err error
 
-	dsn := "admin:gitmate1234@tcp(gitmate-database.cbimo8eqih5y.ap-northeast-2.rds.amazonaws.com:3306)/gitmate_db?charset=utf8"
+	dsn := "admin:pwd@tcp(gitmate-database.cbimo8eqih5y.ap-northeast-2.rds.amazonaws.com:3306)/gitmate_db?charset=utf8"
 	db, err = sql.Open("mysql", dsn)
 	if err != nil {
 		log.Fatalf("Error opening database: %v", err)
