@@ -8,7 +8,7 @@ import (
 )
 
 func InitDB() (*sql.DB, error) {
-	dsn := "admin:gitmate1234@tcp(gitmate-database.cbimo8eqih5y.ap-northeast-2.rds.amazonaws.com:3306)/gitmate_db?charset=utf8"
+	dsn := "RDS"
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("error opening database: %v", err)
